@@ -106,12 +106,12 @@ func (cf Cloudflare) bindInterface() (err error) {
 	return
 }
 
-func (cf Cloudflare) bindPublicIP(typ, content string) (err error) {
+func (cf Cloudflare) bindPublicIP(typ, name, content string) (err error) {
 	api, _ := cloudflare.NewWithAPIToken(cf.Token)
 	ctx := context.Background()
 
 	query := cloudflare.DNSRecord{
-		Name: fmt.Sprintf("%s.%s", os.Getenv("PUB_BIND"), cf.ZoneName),
+		Name: fmt.Sprintf("%s.%s", name, cf.ZoneName),
 		Type: typ,
 	}
 	record, err := cf.findOne(query)
@@ -197,20 +197,22 @@ func main() {
 		}
 	}
 
-	if pubBind := util.Getenv("PUB_BIND", ""); pubBind != "" {
+	if name := util.Getenv("PUB_BIND", ""); name != "" {
 		ipv4, err := util.GetPublicIP()
 		if err != nil {
 			return
 		}
-		if err := cf.bindPublicIP("A", ipv4); err != nil {
+		if err := cf.bindPublicIP("A", name, ipv4); err != nil {
 			log.Fatal(err)
 		}
+	}
 
+	if name := util.Getenv("PUB_BIND_IPV6", ""); name != "" {
 		ipv6, err := util.GetPublicIPv6()
 		if err != nil {
 			return
 		}
-		if err := cf.bindPublicIP("AAAA", ipv6); err != nil {
+		if err := cf.bindPublicIP("AAAA", name, ipv6); err != nil {
 			log.Fatal(err)
 		}
 	}
