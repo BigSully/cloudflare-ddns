@@ -106,18 +106,13 @@ func (cf Cloudflare) bindInterface() (err error) {
 	return
 }
 
-func (cf Cloudflare) bindPublicIP() (err error) {
+func (cf Cloudflare) bindPublicIP(typ, content string) (err error) {
 	api, _ := cloudflare.NewWithAPIToken(cf.Token)
 	ctx := context.Background()
 
-	ipv4, err := util.GetPublicIP()
-	if err != nil {
-		return
-	}
-
 	query := cloudflare.DNSRecord{
 		Name: fmt.Sprintf("%s.%s", os.Getenv("PUB_BIND"), cf.ZoneName),
-		Type: util.Getenv("PUB_BIND_TYPE", "A"),
+		Type: typ,
 	}
 	record, err := cf.findOne(query)
 	if err != nil {
@@ -129,7 +124,7 @@ func (cf Cloudflare) bindPublicIP() (err error) {
 		newRecord := cloudflare.DNSRecord{
 			Name:    query.Name,
 			Type:    query.Type,
-			Content: ipv4,
+			Content: content,
 		}
 		if _, err = api.CreateDNSRecord(ctx, cf.ZoneID, newRecord); err != nil {
 			log.Fatal(err)
@@ -138,7 +133,7 @@ func (cf Cloudflare) bindPublicIP() (err error) {
 	}
 
 	// update
-	record.Content = ipv4
+	record.Content = content
 
 	if err = api.UpdateDNSRecord(ctx, cf.ZoneID, record.ID, record); err != nil {
 		log.Fatal(err)
@@ -203,7 +198,19 @@ func main() {
 	}
 
 	if pubBind := util.Getenv("PUB_BIND", ""); pubBind != "" {
-		if err := cf.bindPublicIP(); err != nil {
+		ipv4, err := util.GetPublicIP()
+		if err != nil {
+			return
+		}
+		if err := cf.bindPublicIP("A", ipv4); err != nil {
+			log.Fatal(err)
+		}
+
+		ipv6, err := util.GetPublicIPv6()
+		if err != nil {
+			return
+		}
+		if err := cf.bindPublicIP("AAAA", ipv6); err != nil {
 			log.Fatal(err)
 		}
 	}

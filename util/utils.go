@@ -73,3 +73,20 @@ func GetPublicIP() (ip string, err error) {
 
 	return m["ip"], nil
 }
+
+func GetPublicIPv6() (ip string, err error) {
+	resp, err := http.Get("http://icanhazip.com")
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	s := string(body)
+	ipv6 := strings.TrimSpace(s)
+
+	return ipv6, nil
+}
