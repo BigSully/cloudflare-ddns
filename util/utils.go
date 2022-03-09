@@ -10,6 +10,41 @@ import (
 	"strings"
 )
 
+func IsIPv4(address string) bool {
+	return strings.Count(address, ":") < 2
+}
+
+func IsIPv6(address string) bool {
+	return strings.Count(address, ":") >= 2
+}
+
+func PrintInterfaceAddr(interfaceName string) {
+	var (
+		err   error
+		ief   *net.Interface
+		addrs []net.Addr
+	)
+	if ief, err = net.InterfaceByName(interfaceName); err != nil { // get interface
+		return
+	}
+	if addrs, err = ief.Addrs(); err != nil { // get addresses
+		return
+	}
+	for _, addr := range addrs { // get ipv4 address
+		ip := addr.(*net.IPNet).IP
+		ipStr := ip.String()
+		if ip.IsLinkLocalUnicast() {
+			fmt.Printf("%v IsLinkLocalUnicast() \n", ipStr)
+			continue
+		}
+		if ip.IsPrivate() {
+			fmt.Printf("%v IsPrivate() \n", ipStr)
+			continue
+		}
+		fmt.Printf("ip: %s, isipv6: %v\n", ipStr, IsIPv6(ipStr))
+	}
+}
+
 // useful links:
 // https://stackoverflow.com/questions/27410764/dial-with-a-specific-address-interface-golang
 // https://stackoverflow.com/questions/22751035/golang-distinguish-ipv4-ipv6
