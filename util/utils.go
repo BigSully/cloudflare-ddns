@@ -80,7 +80,7 @@ func Getenv(key, def string) string {
 }
 
 func GetPublicIP() (ip string, err error) {
-	resp, err := http.Get("https://1.1.1.1/cdn-cgi/trace")
+	resp, err := http.Get("https://1.0.0.1/cdn-cgi/trace")
 	if err != nil {
 		return
 	}
